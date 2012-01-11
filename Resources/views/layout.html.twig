@@ -5,6 +5,10 @@
     <title>Symfony2 Translations Editor</title>
     <meta name="description" content="">
     <meta name="author" content="">
+    {% javascripts
+        '@ServerGroveTranslationEditorBundle/public/js/json2.js'
+        %}<script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
     <!--[if lt IE 9]>

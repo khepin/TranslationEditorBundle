@@ -80,9 +80,15 @@ class ImportCommand extends Base
     public function import($filename)
     {
         $fname = basename($filename);
-        $this->output->writeln("Processing <info>".$filename."</info>...");
 
         list($name, $locale, $type) = explode('.', $fname);
+        $this->updateLocales($locale);
+        
+        $path = pathinfo($filename);
+        $dirs = explode('/',$path['dirname']);
+        $bundle = $dirs[count($dirs)-3];
+        
+        $this->output->writeln("Processing <info>".$bundle.': '.$fname."</info>...");
 
         $this->setIndexes();
 
@@ -91,19 +97,31 @@ class ImportCommand extends Base
                 $yaml = new Parser();
                 $value = $yaml->parse(file_get_contents($filename));
 
-                $data = $this->getContainer()->get('server_grove_translation_editor.storage_manager')->getCollection()->findOne(array('filename'=>$filename));
+                $data = $this->getContainer()
+                        ->get('server_grove_translation_editor.storage_manager')
+                        ->getCollection()->findOne(array('bundle'=>$bundle));
                 if (!$data) {
                     $data = array(
-                        'filename' => $filename,
-                        'locale' => $locale,
-                        'type' => $type,
-                        'entries' => array(),
+                        'translations' => 'translations',
+                        'bundle' => $bundle,
+                        $bundle => array(
+                            'domain' => array(
+                                'name' => $name,
+                                'locales' => array(
+                                    $locale => array(
+                                        'filename' => $filename,
+                                        'type'      => $type,
+                                        'entries'   => array()
+                                    )
+                                )
+                            )
+                        )
                     );
 
                 }
 
                 $this->output->writeln("  Found ".count($value)." entries...");
-                $data['entries'] = $value;
+                $data[$bundle]['domain']['locales'][$locale]['entries'] = $value;
 
                 if (!$this->input->getOption('dry-run')) {
                     $this->updateValue($data);
@@ -126,7 +144,7 @@ class ImportCommand extends Base
         $collection = $collection = $this->getContainer()->get('server_grove_translation_editor.storage_manager')->getCollection();
 
         $criteria = array(
-            'filename' => $data['filename'],
+            'bundle' => $data['bundle'],
         );
 
         $mdata = array(
@@ -134,6 +152,22 @@ class ImportCommand extends Base
         );
 
         return $collection->update($criteria, $data, array('upsert' => true));
+    }
+    
+    protected function updateLocales($locale){
+        $collection = $this->getContainer()
+                        ->get('server_grove_translation_editor.storage_manager')
+                        ->getCollection();
+        $locales = $collection->findOne(array('locales' => 'locales'));
+        if(!$locales){
+            $locales = array('locales' => 'locales', 'available_locales' => array());
+        }
+        if(!in_array($locale, $locales['available_locales'])){
+            $locales['available_locales'][] = $locale;
+        }
+        
+        $criteria = array('locales' => 'locales');
+        $collection->update($criteria, $locales, array('upsert' => true));
     }
 
 }

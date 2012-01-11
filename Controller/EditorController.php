@@ -13,37 +13,123 @@ class EditorController extends Controller
 
     public function listAction()
     {
-        $data = $this->getCollection()->find();
-
-        $data->sort(array('locale' => 1));
-
-        $locales = array();
-
         $default = $this->container->getParameter('locale', 'en');
-        $missing = array();
-
-        foreach ($data as $d) {
-            $locales[$d['locale']] = $d;
+        
+        $locales = $this->getCollection()->find(array('locales' => 'locales'));
+        $locales = $locales->getNext();
+        $locales = $locales['available_locales'];
+//        var_dump($locales);
+        
+        $data = $this->getCollection()->find(array('translations' => 'translations'));
+        $translations = array();
+        foreach($data as $translation){
+            $translations[] = $translation;
         }
-
-        $keys = array_keys($locales);
-
-        foreach ($keys as $locale) {
-            if ($locale != $default) {
-                foreach ($locales[$default]['entries'] as $key => $val) {
-                    if (!isset($locales[$locale]['entries'][$key]) || $locales[$locale]['entries'][$key] == $key) {
-                        $missing[$key] = 1;
-                    }
-                }
-            }
-        }
-
-        return $this->render('ServerGroveTranslationEditorBundle:Editor:list.html.twig', array(
-                'locales' => $locales,
-                'default' => $default,
-                'missing' => $missing,
-            )
+        
+        return $this->render(
+                'ServerGroveTranslationEditorBundle:Editor:list.html.twig', 
+                compact('locales', 'translations', 'default') 
         );
+//        foreach($translations as $translation){
+////            var_dump($translation);
+//            $bundle = $translation['bundle'];
+//            echo $bundle.'<br>';
+//            foreach($translation[$bundle] as $domain){
+////                var_dump($domain);
+//                echo "-->".$domain['name'].'<br>';
+//                foreach($domain['locales'] as $locale => $entries){
+//                    echo "----->".$locale.'<br>';
+//                    print_r($entries['entries']);
+//                    echo "<br>";
+//                }
+//            }
+//        }
+        
+        return compact('locales', 'translations');
+
+//        $locales = array();
+//        $files = array();
+//
+//        $default = $this->container->getParameter('locale', 'en');
+//        $missing = array();
+//
+//        
+//        foreach ($data as $d) {
+//            $files[$d['file_canonical']][$d['locale']] = $d;
+//        }
+//        foreach($files as $name => $locales){
+//            var_dump(array_keys($locales));
+////            sort(array_flip($locales));
+//        }
+////        foreach($files as $fname => $locales){
+////            echo $fname.'<br>';
+////            foreach($locales as $locale => $entries){
+////                echo '&nbsp;&nbsp;'.$locale.': '.count($entries).'<br>';
+//////                echo print_r($entries, true);
+////            }
+////        }
+//        
+//        foreach ($data as $d) {
+//            $locales[$d['locale']] = $d;
+//        }
+//
+//        $keys = array_keys($locales);
+//
+//        foreach ($keys as $locale) {
+//            if ($locale != $default) {
+//                foreach ($locales[$default]['entries'] as $key => $val) {
+//                    if (!isset($locales[$locale]['entries'][$key]) || $locales[$locale]['entries'][$key] == $key) {
+//                        $missing[$key] = 1;
+//                    }
+//                }
+//            }
+//        }
+//        $locales = array();
+//        $files = array();
+//
+//        $default = $this->container->getParameter('locale', 'en');
+//        $missing = array();
+//
+//        
+//        foreach ($data as $d) {
+//            $files[$d['file_canonical']][$d['locale']] = $d;
+//        }
+//        foreach($files as $name => $locales){
+//            var_dump(array_keys($locales));
+////            sort(array_flip($locales));
+//        }
+////        foreach($files as $fname => $locales){
+////            echo $fname.'<br>';
+////            foreach($locales as $locale => $entries){
+////                echo '&nbsp;&nbsp;'.$locale.': '.count($entries).'<br>';
+//////                echo print_r($entries, true);
+////            }
+////        }
+//        
+//        foreach ($data as $d) {
+//            $locales[$d['locale']] = $d;
+//        }
+//
+//        $keys = array_keys($locales);
+//
+//        foreach ($keys as $locale) {
+//            if ($locale != $default) {
+//                foreach ($locales[$default]['entries'] as $key => $val) {
+//                    if (!isset($locales[$locale]['entries'][$key]) || $locales[$locale]['entries'][$key] == $key) {
+//                        $missing[$key] = 1;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return $this->render('ServerGroveTranslationEditorBundle:Editor:list.html.twig', array(
+//                'locales' => $locales,
+//                'default' => $default,
+//                'missing' => $missing,
+//                'files'   => $files,
+//            )
+//        );
+//        return new \Symfony\Component\HttpFoundation\Response('hoho');
     }
 
     public function removeAction()
