@@ -6,7 +6,12 @@
     <meta name="description" content="">
     <meta name="author" content="">
     {% javascripts
-        '@ServerGroveTranslationEditorBundle/public/js/json2.js'
+        '@ServerGroveTranslationEditorBundle/Resources/public/js/vendors/jquery1.7.1.min.js'
+        '@ServerGroveTranslationEditorBundle/Resources/public/js/vendors/json2.js'
+        '@ServerGroveTranslationEditorBundle/Resources/public/js/vendors/underscore-min.js'
+        '@ServerGroveTranslationEditorBundle/Resources/public/js/vendors/backbone.js'
+        '@ServerGroveTranslationEditorBundle/Resources/public/js/vendors/ich.js'
+        '@ServerGroveTranslationEditorBundle/Resources/public/js/*'
         %}<script type="text/javascript" src="{{ asset_url }}"></script>
     {% endjavascripts %}
 
@@ -48,10 +53,20 @@
     <div class="container-fluid">
       <div class="sidebar">
         <div class="well">
+          <h5>Available Bundles</h5>
+          <ul>
+              {% for bundle in bundles %}
+              <li>
+                  <a href="{{path('sg_localeditor_editbundle', {bundle: bundle})}}">{{bundle}}</a>
+              </li>
+              {%endfor%}
+          </ul>
           <h5>Available Locales</h5>
           <ul>
-              {% for locale, v in locales %}
-              <li>{{locale}} {% if locale == default %}<span class="label">Default</span>{%endif%}</li>
+              {% for locale in locales %}
+              <li>{{locale}}
+                  {% if locale == default %}<span class="label">Default</span>{%endif%}
+              </li>
               {%endfor%}
           </ul>
         {% block sidebar %}

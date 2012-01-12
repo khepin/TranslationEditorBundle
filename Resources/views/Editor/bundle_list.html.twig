@@ -1,0 +1,61 @@
+{% extends "ServerGroveTranslationEditorBundle::layout.html.twig" %}
+
+{% block body %}
+<h1>Editing translations for {{bundle_name}}</h1>
+{% for domain_name, domain in bundle.domains %}
+<div class="{{domain_name | lower}}">
+<h2>Translations in domain: "{{ domain_name }}"</h2>
+<table class="zebra-striped">
+    <thead>
+    <tr>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+</div>
+{% endfor %}
+<div id="sg-editor">
+    <p><textarea></textarea></p>
+    <input type="button" class="submit" value="Ok"></input>
+    <input type="button" class="cancel" value="Cancel"></input>
+</div>
+<!-- Example row of columns -->
+<footer>
+  <p>&copy; ServerGrove 2012</p>
+</footer>
+</div>
+
+<script type="text/html" id="header_row">
+    <tr>
+        <th>Key</th>
+        {{"{{#locales}}"}}
+        <th>{{"{{.}}"}}</th>
+        {{"{{/locales}}"}}
+    </tr>
+</script>
+<script type="text/html" id="nested_key">
+    <tr><td colspan="{{'{{length}}'}}">{{"{{name}}"}}</td></tr>
+</script>
+<script type="text/html" id="full_row">
+    <tr>
+        <td>{{"{{key}}"}}</td>
+        {{"{{#translations}}"}}
+            <td id="{{'{{id}}'}}" class="editable">{{"{{string}}"}}</td>
+        {{"{{/translations}}"}}
+    </tr>
+</script>
+<script type="text/javascript">
+var Domain = translator.module('Domain');
+{% for domain_name, translations in bundle.domains %}
+$(document).ready(function(){
+    var app = new Domain.View({
+        el: 'div.{{domain_name}}', 
+        domain: {{translations | json_encode | raw}}, 
+        url: '{{path("sg_localeditor_savebundle", {bundle: bundle_name, domain: domain_name}) }}',
+    });
+    app.render();
+})
+{% endfor %}
+</script>
+{% endblock %}

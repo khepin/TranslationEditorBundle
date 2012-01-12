@@ -6,30 +6,27 @@
     <tr>
         <th></th>
         <th>Key</th>
-        {% for locale in locales %}
-        <th>{{locale}}
-            {% if locale == default %}<span class="label">Default</span>{%endif%}
-        </th>
-        {% endfor %}
     </tr>
     </thead>
     <tbody>
-        {% for translation in translations %}
-            <tr><td colspan="{{ locales | length + 2}}">{{translation.bundle}}</td></tr>
-            {% for domain in translation[translation.bundle] %}
-            <tr><td></td><td colspan="{{ locales | length + 1}}">{{domain.name}}</td></tr>
-                {% for string in domain.locales[default].entries %}
-                <tr><td>{% debug string %}</td></tr>
-                {% endfor %}
-            {% endfor %}
-        {% endfor %}
     </tbody>
 </table>
 <!-- Example row of columns -->
-
+<script type="text/javascript">
+//    var view = new translator.module('Bundle').View({{bundles | raw}});
+var Bundle = translator.module('Bundle');
+var app = new Bundle.View({{bundles | raw}});
+</script>
 <footer>
   <p>&copy; ServerGrove 2012</p>
 </footer>
 </div>
+
+<script type="text/html" id="bundle_header">
+    <tr><td colspan="3">{{"{{name}}"}}</td></tr>
+</script>
+<script type="text/html" id="domain_header">
+    <tr><td></td><td>{{"{{name}}"}}</td></tr>
+</script>
 
 {% endblock %}

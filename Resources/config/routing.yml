@@ -13,3 +13,11 @@ sg_localeditor_add:
 sg_localeditor_remove:
     pattern:  /translations/remove
     defaults: { _controller: ServerGroveTranslationEditorBundle:Editor:remove }
+    
+sg_localeditor_editbundle:
+    pattern: /translations/{bundle}/editor
+    defaults: { _controller: ServerGroveTranslationEditorBundle:Editor:editBundle }
+    
+sg_localeditor_savebundle:
+    pattern: /translations/save/{bundle}/{domain}
+    defaults: { _controller: ServerGroveTranslationEditorBundle:Editor:saveBundle }
