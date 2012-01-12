@@ -108,7 +108,8 @@ translator.module = translator.module();
                 var translations = this.model.get(locale);
                 for(var step in path){
                     path_id += "-"+path[step];
-                    translations = translations[path[step]];
+                    // empty string if the index was not defined in this locale
+                    translations = translations[path[step]] || '';
                     data.key = prefix + path[step];
                 }
                 data.translations.push({

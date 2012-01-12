@@ -11,26 +11,20 @@ use Symfony\Component\Finder\Finder;
 /**
  * Command for exporting translations into files
  */
+class ExportCommand extends Base {
 
-class ExportCommand extends Base
-{
-
-
-    protected function configure()
-    {
+    protected function configure() {
         parent::configure();
 
         $this
-        ->setName('locale:editor:export')
-        ->setDescription('Export translations into files')
-        ->addArgument('filename')
-        ->addOption("dry-run")
+                ->setName('locale:editor:export')
+                ->setDescription('Export translations into files')
+                ->addArgument('filename')
+                ->addOption("dry-run")
         ;
-
     }
 
-    public function execute(InputInterface $input, OutputInterface $output)
-    {
+    public function execute(InputInterface $input, OutputInterface $output) {
         $this->input = $input;
         $this->output = $output;
 
@@ -44,14 +38,13 @@ class ExportCommand extends Base
             $finder->files()->in($filename)->name('*');
 
             foreach ($finder as $file) {
-                $output->writeln("Found <info>".$file->getRealpath()."</info>...");
+                $output->writeln("Found <info>" . $file->getRealpath() . "</info>...");
                 $files[] = $file->getRealpath();
             }
-
         } else {
-            $dir = $this->getContainer()->getParameter('kernel.root_dir').'/../src';
+            $dir = $this->getContainer()->getParameter('kernel.root_dir') . '/../src';
 
-            $output->writeln("Scanning ".$dir."...");
+            $output->writeln("Scanning " . $dir . "...");
             $finder = new Finder();
             $finder->directories()->in($dir)->name('translations');
 
@@ -59,7 +52,7 @@ class ExportCommand extends Base
                 $finder2 = new Finder();
                 $finder2->files()->in($dir->getRealpath())->name('*');
                 foreach ($finder2 as $file) {
-                    $output->writeln("Found <info>".$file->getRealpath()."</info>...");
+                    $output->writeln("Found <info>" . $file->getRealpath() . "</info>...");
                     $files[] = $file->getRealpath();
                 }
             }
@@ -70,37 +63,46 @@ class ExportCommand extends Base
             return;
         }
         $output->writeln(sprintf("Found %d files, exporting...", count($files)));
-        
-        foreach($files as $filename) {
+
+        foreach ($files as $filename) {
             $this->export($filename);
         }
-
     }
 
-    public function export($filename)
-    {
+    public function export($filename) {
         $fname = basename($filename);
-        $this->output->writeln("Exporting to <info>".$filename."</info>...");
+        $this->output->writeln("Exporting to <info>" . $filename . "</info>...");
 
         list($name, $locale, $type) = explode('.', $fname);
 
-        switch($type) {
+        $path = pathinfo($filename);
+        $dirs = explode('/', $path['dirname']);
+        $bundle = $dirs[count($dirs) - 4] . $dirs[count($dirs) - 3];
+
+        switch ($type) {
             case 'yml':
-                $data = $this->getContainer()->get('server_grove_translation_editor.storage_manager')->getCollection()->findOne(array('filename'=>$filename));
+                $data = $this->getContainer()
+                                ->get('server_grove_translation_editor.storage_manager')
+                                ->getCollection()->findOne(array('name' => $bundle));
                 if (!$data) {
                     $this->output->writeln("Could not find data for this locale");
                     return;
                 }
 
-                $result = '';
-                foreach($data['entries'] as $key => $val) {
-                    $result .= $key.': '.$val.PHP_EOL;
+                foreach ($data['domains'] as $domain) {
+                    foreach ($domain as $locale) {
+                        $result = $locale['entries'];
+                        $this->output->writeln("  Writing " . count($locale['entries']) . " entries to $filename");
+                        if (!$this->input->getOption('dry-run')) {
+                            file_put_contents(
+                                    $locale['filename'], 
+                                    \Symfony\Component\Yaml\Yaml::dump($result)
+                            );
+                        }
+                    }
                 }
 
-                $this->output->writeln("  Writing ".count($data['entries'])." entries to $filename");
-                if (!$this->input->getOption('dry-run')) {
-                    file_put_contents($filename, $result);
-                }
+
 
                 break;
             case 'xliff':
@@ -109,7 +111,5 @@ class ExportCommand extends Base
         }
     }
 
-
 }
-
 

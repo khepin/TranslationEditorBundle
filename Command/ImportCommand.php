@@ -77,7 +77,7 @@ class ImportCommand extends Base {
 
         $path = pathinfo($filename);
         $dirs = explode('/', $path['dirname']);
-        $bundle = $dirs[count($dirs) - 4].$dirs[count($dirs) - 3];
+        $bundle = $dirs[count($dirs) - 4] . $dirs[count($dirs) - 3];
 
         $this->output->writeln("Processing <info>" . $bundle . ': ' . $fname . "</info>...");
 
@@ -97,8 +97,8 @@ class ImportCommand extends Base {
                         'domains' => array(),
                     );
                 }
-                
-                if(!isset($data['domains'][$name])){
+
+                if (!isset($data['domains'][$name])) {
                     $data['domains'][$name] = array();
                 }
 
@@ -109,8 +109,12 @@ class ImportCommand extends Base {
                         'entries' => $value,
                     );
                 }
-                
+
                 $this->output->writeln("  Found " . count($value) . " entries...");
+                $ref = $this->getReferenceTranslation($data['domains'][$name]);
+                foreach ($data['domains'][$name] as $locale => $translations) {
+                    $data['domains'][$name][$locale] = $this->deepKeyMerge($ref, $translations);
+                }
 
                 if (!$this->input->getOption('dry-run')) {
                     $this->updateValue($data);
@@ -139,6 +143,54 @@ class ImportCommand extends Base {
         );
 
         return $collection->update($criteria, $data, array('upsert' => true));
+    }
+
+    protected function deepKeyMerge($array1, $array2) {
+        if (!is_array($array1)) {
+            $array1 = array();
+        }
+
+        // LOOP THROUGH $array2
+        foreach ($array2 AS $k => $v) {
+
+            // CHECK IF VALUE EXISTS IN $array1
+            if (!empty($array1[$k])) {
+                // IF VALUE EXISTS CHECK IF IT'S AN ARRAY OR A STRING
+                if (!is_array($array2[$k])) {
+                    // OVERWRITE IF IT'S A STRING
+                    $array1[$k] = $array2[$k];
+                } else {
+                    // RECURSE IF IT'S AN ARRAY
+                    $array1[$k] = $this->deepKeyMerge($array1[$k], $array2[$k]);
+                }
+            } else {
+                // IF VALUE DOESN'T EXIST IN $array1 USE $array2 VALUE
+                $array1[$k] = $v;
+            }
+        }
+        unset($k, $v);
+
+
+        return $array1;
+    }
+
+    protected function getReferenceTranslation($translations) {
+        //Ensure all keys are present everywhere
+        // Create a reference array with all keys
+        $ref = array();
+        // merge all keys
+        foreach ($translations as $k => $locale) {
+            $ref = $this->deepKeyMerge($ref, $locale);
+        }
+        // empty all translations
+        $closure = function($el) use($ref, &$closure) {
+                    if (!is_array($el)) {
+                        return '';
+                    }
+                    return array_map($closure, $el);
+                };
+        $ref = array_map($closure, $ref);
+        return $ref;
     }
 
 }
